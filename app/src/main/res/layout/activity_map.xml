@@ -33,11 +33,19 @@
 
     </LinearLayout>
 
-    <!-- Fragmento do mapa -->
+    <!-- Mapa ocupa o espaço restante -->
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Botão de localização abaixo do mapa -->
+    <Button
+        android:id="@+id/btnLocalizacao"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Localização" />
 
 </LinearLayout>
