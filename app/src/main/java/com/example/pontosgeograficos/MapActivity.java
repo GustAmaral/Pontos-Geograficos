@@ -25,19 +25,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-
-    // Coordenadas das três localizações fixas
-    private final LatLng CARANDAI = new LatLng(-20.9669, -43.8003);
-    private final LatLng VICOSA   = new LatLng(-20.7546, -42.8825);
-    private final LatLng CCE_UFV  = new LatLng(-20.7613, -42.8691);
-
-    // Marcador da posição atual (azul) — começa nulo
     private Marker marcadorAtual = null;
 
-    private int opcaoInicial;
+    // Coordenadas carregadas do banco
+    private LatLng CARANDAI;
+    private LatLng VICOSA;
+    private LatLng CCE_UFV;
 
+    private int opcaoInicial;
     private static final int REQUEST_LOCATION = 1;
     private FusedLocationProviderClient fusedLocationClient;
+    private DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,26 +43,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_map);
 
         opcaoInicial = getIntent().getIntExtra("opcao", 0);
-
-        // Cliente de localização
+        dbHelper = new DatabaseHelper(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Inicializa o mapa
+        // Carrega coordenadas do banco de dados
+        double[] coordCarandai = dbHelper.getCoordenadasPorId(DatabaseHelper.ID_CARANDAI);
+        double[] coordVicosa   = dbHelper.getCoordenadasPorId(DatabaseHelper.ID_VICOSA);
+        double[] coordCCE      = dbHelper.getCoordenadasPorId(DatabaseHelper.ID_CCE_UFV);
+
+        CARANDAI = new LatLng(coordCarandai[0], coordCarandai[1]);
+        VICOSA   = new LatLng(coordVicosa[0],   coordVicosa[1]);
+        CCE_UFV  = new LatLng(coordCCE[0],      coordCCE[1]);
+
         SupportMapFragment mapFragment = (SupportMapFragment)
                 getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // Botões de navegação entre locais
-        Button btnCarandai = findViewById(R.id.btnCarandai);
-        Button btnVicosa   = findViewById(R.id.btnVicosa);
-        Button btnDPI      = findViewById(R.id.btnDPI);
+        Button btnCarandai    = findViewById(R.id.btnCarandai);
+        Button btnVicosa      = findViewById(R.id.btnVicosa);
+        Button btnDPI         = findViewById(R.id.btnDPI);
         Button btnLocalizacao = findViewById(R.id.btnLocalizacao);
 
         btnCarandai.setOnClickListener(v -> centralizarMapa(0));
         btnVicosa.setOnClickListener(v -> centralizarMapa(1));
         btnDPI.setOnClickListener(v -> centralizarMapa(2));
-
-        // Botão de localização atual
         btnLocalizacao.setOnClickListener(v -> obterLocalizacaoAtual());
     }
 
@@ -72,7 +74,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Adiciona os três marcadores fixos (vermelhos)
         mMap.addMarker(new MarkerOptions()
                 .position(CARANDAI).title("Minha casa em Carandaí"));
         mMap.addMarker(new MarkerOptions()
@@ -80,42 +81,34 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions()
                 .position(CCE_UFV).title("CCE/UFV"));
 
-        // Centraliza no marcador da opção escolhida no menu
         centralizarMapa(opcaoInicial);
     }
 
     private void centralizarMapa(int opcao) {
         if (mMap == null) return;
-
         LatLng destino;
         switch (opcao) {
             case 1:  destino = VICOSA;   break;
             case 2:  destino = CCE_UFV;  break;
             default: destino = CARANDAI; break;
         }
-
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destino, 15f));
     }
 
     private void obterLocalizacaoAtual() {
-        // Verifica se tem permissão
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            // Solicita permissão ao usuário
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_LOCATION);
             return;
         }
-
-        // Obtém última localização conhecida
         fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
             if (location != null) {
                 atualizarMarcadorAtual(location);
             } else {
                 Toast.makeText(this,
-                        "Não foi possível obter a localização. Tente novamente.",
-                        Toast.LENGTH_SHORT).show();
+                        "Não foi possível obter a localização.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -123,35 +116,29 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void atualizarMarcadorAtual(Location location) {
         LatLng posicaoAtual = new LatLng(location.getLatitude(), location.getLongitude());
 
-        // Remove marcador azul anterior, se existir
         if (marcadorAtual != null) {
             marcadorAtual.remove();
         }
 
-        // Adiciona novo marcador azul
         marcadorAtual = mMap.addMarker(new MarkerOptions()
                 .position(posicaoAtual)
                 .title("Minha localização atual")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
 
-        // Centraliza o mapa na posição atual
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(posicaoAtual, 17f));
 
-        // Calcula distância até a casa em Viçosa
         float[] resultado = new float[1];
         Location.distanceBetween(
                 location.getLatitude(), location.getLongitude(),
                 VICOSA.latitude, VICOSA.longitude,
                 resultado
         );
-        float distancia = resultado[0];
 
         Toast.makeText(this,
-                String.format("Você está a %.0f metros da sua casa em Viçosa", distancia),
+                String.format("Você está a %.0f metros da sua casa em Viçosa", resultado[0]),
                 Toast.LENGTH_LONG).show();
     }
 
-    // Callback da resposta do usuário ao pedido de permissão
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -159,7 +146,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (requestCode == REQUEST_LOCATION) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                obterLocalizacaoAtual(); // tenta novamente com permissão concedida
+                obterLocalizacaoAtual();
             } else {
                 Toast.makeText(this,
                         "Permissão de localização negada.", Toast.LENGTH_SHORT).show();
