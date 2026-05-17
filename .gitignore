@@ -1,15 +1,81 @@
+# ======================
+# ANDROID STUDIO
+# ======================
+
+# Arquivos de build
+build/
+app/build/
+
+# Arquivos locais do Android Studio
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.idea/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/.name
+.idea/compiler.xml
+.idea/copyright/profiles_settings.xml
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules
+.idea/runConfigurations
+.idea/vcs.xml
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+gradle-wrapper.jar
+gradlew
+gradlew.bat
+
+# Arquivos locais — NUNCA subir (contém chaves e configurações da máquina)
 local.properties
+
+# Keystore (assinatura do app — NUNCA subir)
+*.jks
+*.keystore
+
+# Arquivos de log
+*.log
+
+# Arquivos temporários do sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Capturas de memória e profiling
+*.hprof
+
+# Android Lint
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+lint/reports/
+
+# Output gerado
+out/
+gen/
+bin/
+
+# NDK / C++
+obj/
+*.so
+*.o
+*.a
+
+# Arquivos de teste de cobertura
+*.exec
+*.ec
+
+# Arquivos de configuração local do emulador
+*.avd/
+
+# IntelliJ / Android Studio — arquivos de usuário
+*.user
+*.userprefs
